@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>音樂家圖書館 - 音樂互動網站</title>
+    <script src="data.js"></script>
+    <script>
+        function showPeriod(period) {
+            // 這時候就能讀到 data.js 裡的變數了
+            console.log(composerData);
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #2b2b45;
+            --pink: #ff6fb0;
+            --yellow: #ffd23f;
+            --amber: #ff9f43;
+            --purple: #7c4fe0;
+            --cream: #fffaf0;
+            --bg: #eaf6ff;
+            --period-baroque: #cdeaff;
+            --period-classical: #d7f7dc;
+            --period-romantic: #ffdcef;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Press Start 2P', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(90deg, rgba(255,255,255,0.6) 50%, transparent 50%),
+                linear-gradient(rgba(255,255,255,0.6) 50%, transparent 50%);
+            background-size: 24px 24px;
+            color: var(--ink);
+            margin: 0;
+            padding: 30px 16px 60px;
+            line-height: 1.9;
+        }
+        .container { max-width: 1000px; margin: auto; text-align: center; }
+
+        h1 {
+            display: inline-block;
+            font-size: 22px;
+            color: var(--purple);
+            background: var(--cream);
+            border: 4px solid var(--ink);
+            padding: 16px 24px;
+            margin: 0 0 32px;
+            box-shadow: 6px 6px 0 var(--ink);
+            text-shadow: 2px 2px 0 var(--yellow);
+            clip-path: polygon(0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px));
+        }
+
+        /* 時期切換按鈕 */
+        .tabs { margin-bottom: 40px; display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; }
+        .tab-btn {
+            font-family: inherit;
+            padding: 14px 20px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 4px solid var(--ink);
+            background: var(--cream);
+            color: var(--ink);
+            box-shadow: 5px 5px 0 var(--ink);
+            transition: transform 0.1s, box-shadow 0.1s;
+            clip-path: polygon(0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px));
+        }
+        .tab-btn:nth-child(1) { background: var(--period-baroque); }
+        .tab-btn:nth-child(2) { background: var(--period-classical); }
+        .tab-btn:nth-child(3) { background: var(--period-romantic); }
+        .tab-btn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ink); }
+        .tab-btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+        .tab-btn.active { background: var(--yellow); transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+
+        /* 音樂家清單排版 */
+        .composer-list { display: flex; justify-content: center; flex-wrap: wrap; gap: 28px; }
+        .card {
+            background: var(--cream);
+            border: 4px solid var(--ink);
+            padding: 16px;
+            width: 200px;
+            cursor: pointer;
+            box-shadow: 6px 6px 0 var(--ink);
+            transition: transform 0.15s, box-shadow 0.15s;
+            clip-path: polygon(0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px));
+        }
+        .composer-list.theme-baroque .card { background: var(--period-baroque); }
+        .composer-list.theme-classical .card { background: var(--period-classical); }
+        .composer-list.theme-romantic .card { background: var(--period-romantic); }
+        .card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--ink); }
+        .card img { width: 100%; display: block; border: 3px solid var(--ink); margin-bottom: 12px; }
+        .card h3 { margin: 8px 0 6px; font-size: 12px; line-height: 1.6; }
+        .card p { font-size: 10px; color: var(--amber); margin: 0; }
+
+        /* 彈出視窗 (Modal) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(43,43,69,0.55); justify-content: center; align-items: center; padding: 16px; z-index: 10; }
+        .modal-content {
+            background: var(--cream);
+            padding: 30px 28px 24px;
+            max-width: 920px;
+            width: 94%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+            border: 4px solid var(--ink);
+            box-shadow: 8px 8px 0 var(--ink);
+            text-align: left;
+            clip-path: polygon(0 10px, 10px 10px, 10px 0, calc(100% - 10px) 0, calc(100% - 10px) 10px, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 10px calc(100% - 10px), 0 calc(100% - 10px));
+        }
+        .close-btn {
+            position: absolute; top: -14px; right: -14px;
+            width: 32px; height: 32px; line-height: 26px;
+            text-align: center; font-size: 20px;
+            cursor: pointer; background: var(--pink); color: #fff;
+            border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+            z-index: 2;
+        }
+        .close-btn:hover { background: #ff4d94; }
+
+        /* 彈出視窗雙欄排版：左邊圖片欄、右邊文字內容 */
+        .modal-grid { display: grid; grid-template-columns: 260px 1fr; gap: 26px; align-items: start; }
+        @media (max-width: 720px) {
+            .modal-grid { grid-template-columns: 1fr; }
+        }
+        .modal-sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 0; }
+        @media (max-width: 720px) {
+            .modal-sidebar { position: static; }
+        }
+        .modal-portrait-img {
+            width: 100%; display: block; border: 4px solid var(--ink);
+            box-shadow: 5px 5px 0 var(--ink); background: #fff;
+        }
+        .modal-extra-figure { margin: 0; }
+        .modal-extra-figure img {
+            width: 100%; height: 160px; object-fit: cover; display: block;
+            border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); background: #fff;
+        }
+        .modal-extra-figure figcaption {
+            font-size: 11px; color: var(--ink); opacity: 0.75;
+            margin-top: 6px; line-height: 1.6; font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        .img-source-note { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; }
+
+        /* 延伸圖片小圖庫 */
+        .gallery-box {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px; margin: 4px 0 6px;
+        }
+        .gallery-item { margin: 0; }
+        .gallery-item img {
+            width: 100%; height: 120px; object-fit: cover; display: block;
+            border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); background: #fff;
+        }
+        .gallery-item figcaption {
+            font-size: 10px; color: var(--ink); opacity: 0.75;
+            margin-top: 5px; line-height: 1.6; font-family: 'Microsoft JhengHei', sans-serif;
+        }
+
+        #modal-name { color: var(--purple); font-size: 15px; margin: 0 0 10px; line-height: 1.7; }
+        #modal-title { color: var(--amber); font-size: 11px; margin: 0 0 18px; }
+        .modal-content p, .modal-content li { font-size: 13px; line-height: 1.9; font-family: 'Microsoft JhengHei', sans-serif; }
+        .modal-content p strong { color: var(--ink); font-family: inherit; }
+
+        /* 生平簡介：依段落分區塊呈現 */
+        .bio-box { margin: 4px 0 20px; }
+        .bio-section {
+            background: #fbf3e2;
+            border: 3px solid var(--ink);
+            border-left: 8px solid var(--purple);
+            border-radius: 2px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
+        .bio-section:last-child { margin-bottom: 0; }
+        .bio-label {
+            display: inline-block;
+            font-family: 'Press Start 2P', 'Microsoft JhengHei', sans-serif;
+            font-size: 10px;
+            color: var(--purple);
+            background: var(--cream);
+            border: 2px solid var(--ink);
+            padding: 3px 8px;
+            margin-bottom: 8px;
+        }
+        .bio-section p { margin: 0; font-size: 13px; line-height: 1.9; font-family: 'Microsoft JhengHei', sans-serif; }
+
+        /* 作品播放清單 */
+        .work-item {
+            cursor: pointer; color: var(--ink); font-size: 13px; padding: 10px 12px;
+            margin: 8px 0; background: #fdf3e2; border: 3px solid var(--ink);
+            border-left: 8px solid var(--amber); transition: 0.15s;
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        .work-item:hover { background: #fbe8c8; transform: translateX(2px); }
+        .work-item.playing { background: var(--yellow); border-left-color: var(--pink); }
+
+        .modal-content::-webkit-scrollbar { width: 10px; }
+        .modal-content::-webkit-scrollbar-thumb { background: var(--purple); border: 2px solid var(--ink); }
+        .modal-content::-webkit-scrollbar-track { background: var(--bg); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>音樂家圖書館</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn" onclick="showPeriod('baroque')">巴洛克時期</button>
+        <button class="tab-btn" onclick="showPeriod('classical')">古典時期</button>
+        <button class="tab-btn" onclick="showPeriod('romantic')">浪漫時期</button>
+    </div>
+
+    <div id="composer-display" class="composer-list">
+        請選擇一個時期了解音樂家
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <div class="modal-grid">
+            <div class="modal-sidebar">
+                <img id="modal-portrait" class="modal-portrait-img" src="" alt="">
+                <div id="modal-extra-image"></div>
+            </div>
+            <div class="modal-main">
+                <h2 id="modal-name"></h2>
+                <h4 id="modal-title"></h4>
+                <p><strong>生平簡介：</strong></p>
+                <div id="modal-bio" class="bio-box"></div>
+                <p><strong>著名作品 (點擊即可試聽)：</strong></p>
+                <div id="modal-works-container"></div>
+                <p id="modal-gallery-heading"><strong>延伸圖片：</strong></p>
+                <div id="modal-gallery" class="gallery-box"></div>
+            </div>
+        </div>
+        <audio id="hidden-audio"></audio>
+    </div>
+</div>
+
+<script>
+    // 這裡放入上面提供的 composerData 資料
+    // const composerData = { ... }; (為了縮短篇幅，實際執行請貼上完整 JSON)
+
+    function showPeriod(period) {
+        // 更新按鈕樣式
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        const list = document.getElementById('composer-display');
+        list.innerHTML = ''; // 清空內容
+        list.className = 'composer-list theme-' + period; // 依時期套用對應配色
+
+        composerData[period].forEach(composer => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openModal(composer);
+            card.innerHTML = `
+                <img src="${composer.img}" alt="${composer.name}">
+                <h3>${composer.name}</h3>
+                <p>${composer.title}</p>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    let currentPlayingIndex = null;
+    function openModal(composer) {
+        document.getElementById('modal-name').innerText = composer.name;
+        document.getElementById('modal-title').innerText = composer.title;
+
+        // 左側肖像照
+        const portrait = document.getElementById('modal-portrait');
+        portrait.src = composer.img;
+        portrait.alt = composer.name;
+
+        // 左側延伸圖片：相關歷史/地理照片，讓內容更生動；載入失敗時自動隱藏
+        const extraBox = document.getElementById('modal-extra-image');
+        extraBox.innerHTML = '';
+        if (composer.extraImage) {
+            const fig = document.createElement('figure');
+            fig.className = 'modal-extra-figure';
+            const img = document.createElement('img');
+            img.src = composer.extraImage.url;
+            img.alt = composer.extraImage.caption;
+            img.loading = 'lazy';
+            img.onerror = () => { fig.style.display = 'none'; };
+            const cap = document.createElement('figcaption');
+            cap.innerText = composer.extraImage.caption;
+            const source = document.createElement('span');
+            source.className = 'img-source-note';
+            source.innerText = '（圖片源自網路）';
+            cap.appendChild(source);
+            fig.appendChild(img);
+            fig.appendChild(cap);
+            extraBox.appendChild(fig);
+        }
+
+        // 延伸圖片小圖庫：手稿、樂器、演出場景等相關歷史圖片
+        const galleryBox = document.getElementById('modal-gallery');
+        const galleryHeading = document.getElementById('modal-gallery-heading');
+        galleryBox.innerHTML = '';
+        if (composer.gallery && composer.gallery.length) {
+            galleryHeading.style.display = '';
+            composer.gallery.forEach(item => {
+                const fig = document.createElement('figure');
+                fig.className = 'gallery-item';
+                const img = document.createElement('img');
+                img.src = item.url;
+                img.alt = item.caption;
+                img.loading = 'lazy';
+                img.onerror = () => { fig.style.display = 'none'; };
+                const cap = document.createElement('figcaption');
+                cap.innerText = item.caption;
+                const source = document.createElement('span');
+                source.className = 'img-source-note';
+                source.innerText = '（圖片源自網路）';
+                cap.appendChild(source);
+                fig.appendChild(img);
+                fig.appendChild(cap);
+                galleryBox.appendChild(fig);
+            });
+        } else {
+            galleryHeading.style.display = 'none';
+        }
+
+        // 生平簡介依段落分區塊呈現，避免整段文字擠在一起
+        const bioBox = document.getElementById('modal-bio');
+        bioBox.innerHTML = composer.bio.map(section => `
+            <div class="bio-section">
+                <div class="bio-label">${section.label}</div>
+                <p>${section.text}</p>
+            </div>
+        `).join('');
+
+        const container = document.getElementById('modal-works-container');
+        container.innerHTML = ''; // 清空舊內容
+        currentPlayingIndex = null; // 每次打開新視窗時重置播放狀態
+
+        // 動態生成作品按鈕
+        composer.works.forEach((workName, index) => {
+            const workItem = document.createElement('div');
+            workItem.className = 'work-item';
+            workItem.innerHTML = `▶ ${workName}`;
+
+            // 點擊作品播放音樂
+            workItem.onclick = () => {
+                const player = document.getElementById('hidden-audio');
+
+                // 邏輯：如果點的是同一首
+                if (currentPlayingIndex === index) {
+                    if (!player.paused) {
+                        player.pause();
+                        workItem.innerHTML = `▶ ${workName} (已暫停)`;
+                        workItem.classList.remove('playing');
+                    } else {
+                    player.play();
+                    workItem.innerHTML = `⏸ ${workName} (播放中)`;
+                    workItem.classList.add('playing');
+                    }
+                } else {
+                    // 邏輯：點的是不同首
+                    player.src = composer.audio[index];
+                    player.play().catch(e => console.log("播放被阻擋"));
+
+                    // 把所有按鈕重置成「未播放」的狀態
+                    const allItems = container.querySelectorAll('.work-item');
+                        allItems.forEach((div, i) => {
+                        div.innerHTML = `▶ ${composer.works[i]}`;
+                        div.classList.remove('playing');
+                    });
+
+                    // 設定現在這首的狀態
+                    workItem.innerHTML = `⏸ ${workName} (播放中)`;
+                    workItem.classList.add('playing');
+                    currentPlayingIndex = index;
+                }
+            };
+            container.appendChild(workItem);
+        });
+
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        const player = document.getElementById('hidden-audio');
+        if (player) {
+            player.pause();
+            player.currentTime = 0;
+        }
+        document.getElementById('modal').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
